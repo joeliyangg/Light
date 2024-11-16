@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>手电筒</title>
+    <style>
+        /* 重置默认样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: #000;
+            transition: background-color 0.3s;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        /* 控制器容器 */
+        .controls {
+            position: fixed;
+            bottom: 50px;
+            width: 80%;
+            max-width: 300px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        /* 滑块样式 */
+        .slider-container {
+            margin: 15px 0;
+        }
+
+        .slider-label {
+            color: white;
+            margin-bottom: 8px;
+            display: block;
+            font-size: 14px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        /* 添加全屏按钮样式 */
+        .fullscreen-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(10px);
+        }
+
+        /* 全屏图标 SVG */
+        .fullscreen-icon {
+            width: 20px;
+            height: 20px;
+            fill: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- 添加全屏按钮 -->
+    <button class="fullscreen-btn" id="fullscreenBtn">
+        <svg class="fullscreen-icon" viewBox="0 0 24 24">
+            <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+        </svg>
+    </button>
+
+    <div class="controls">
+        <div class="slider-container">
+            <label class="slider-label">亮度</label>
+            <input type="range" id="brightness" min="0" max="100" value="50">
+        </div>
+        <div class="slider-container">
+            <label class="slider-label">色温</label>
+            <input type="range" id="temperature" min="0" max="100" value="50">
+        </div>
+    </div>
+
+    <script>
+        const brightnessSlider = document.getElementById('brightness');
+        const temperatureSlider = document.getElementById('temperature');
+
+        function updateLight() {
+            const brightness = brightnessSlider.value;
+            const temperature = temperatureSlider.value;
+            
+            // 将色温值转换为实际的色彩值（从冷色调到暖色调）
+            const warmth = temperature / 100;
+            const r = Math.round(255 * (warmth * 1.2));
+            const b = Math.round(255 * (1 - warmth * 0.8));
+            
+            // 使用RGB值和亮度值创建背景颜色
+            document.body.style.backgroundColor = 
+                `rgb(${r}, ${r}, ${b}, ${brightness / 100})`;
+        }
+
+        brightnessSlider.addEventListener('input', updateLight);
+        temperatureSlider.addEventListener('input', updateLight);
+
+        // 防止设备自动锁屏
+        function keepScreenOn() {
+            if (navigator.wakeLock) {
+                navigator.wakeLock.request('screen')
+                    .catch(err => console.log(err));
+            }
+        }
+        
+        document.addEventListener('click', keepScreenOn);
+        
+        // 初始化
+        updateLight();
+
+        // 添加全屏功能
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+
+        function toggleFullScreen() {
+            if (!document.fullscreenElement) {
+                // 进入全屏
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log(`全屏请求失败: ${err.message}`);
+                });
+            } else {
+                // 退出全屏
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        // 监听全屏按钮点击
+        fullscreenBtn.addEventListener('click', toggleFullScreen);
+
+        // 监听全屏状态变化，更新图标
+        document.addEventListener('fullscreenchange', () => {
+            const icon = fullscreenBtn.querySelector('svg');
+            if (document.fullscreenElement) {
+                icon.innerHTML = '<path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>';
+            } else {
+                icon.innerHTML = '<path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>';
+            }
+        });
+    </script>
+</body>
+</html> 
